@@ -28,29 +28,35 @@ def convolve(image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     pad_height = (kernel_height - 1) // 2
     pad_width = (kernel_width - 1) // 2
 
+    kernel = kernel[::-1, ::-1]
+
+    # Convert to float for math
+    img = image.astype(np.float64, copy=False)
+
+    # zero-padding
+    if num_channels == 1:
+        img_padded = np.zeros((image_height + 2 * pad_height, image_width + 2 * pad_width), dtype=np.float64)
+        img_padded[pad_height:pad_height + image_height, pad_width:pad_width + image_width] = img
+    else:
+        img_padded = np.zeros((image_height + 2 * pad_height, image_width + 2 * pad_width, num_channels), dtype=np.float64)
+        img_padded[pad_height:pad_height + image_height, pad_width:pad_width + image_width, :] = img
+
+
 
     # Channel loop
     for c in range(num_channels):
         for i in range(image_height):
             for j in range(image_width):
-                sum = 0.0
-
-                # Kernel loop
-                for k in range(-pad_height, pad_height + 1):
-                    for l in range(-pad_width, pad_width + 1):
-                        i_dash = i - k # convolution operation and not correlation, can use np.flip but doing manually here
-                        j_dash = j - l
-
-                        if 0 <= i_dash < image_height and 0 <= j_dash < image_width:
-                            if num_channels == 1:
-                                sum += image[i_dash, j_dash] * kernel[k + pad_height, l + pad_width]
-                            else:
-                                sum += image[i_dash, j_dash, c] * kernel[k + pad_height, l + pad_width]
+                if num_channels == 1:
+                    region = img_padded[i:i + kernel_height, j:j + kernel_width]
+                else:
+                    region = img_padded[i:i + kernel_height, j:j + kernel_width, c]
+                val = np.sum(region * kernel)
 
                 if num_channels == 1:
-                    output[i, j] = sum
+                    output[i, j] = val
                 else:
-                    output[i, j, c] = sum
-
+                    output[i, j, c] = val
         
-    return output
+
+    return output.astype(image.dtype)

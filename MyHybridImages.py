@@ -25,14 +25,25 @@ a Gaussian of s.d. highSigma. The resultant image has the same size as the input
 images.
 :rtype numpy.ndarray
 """
-# Your code here.
+
+2dLowKernel = makeGaussianKernel(lowSigma)
+lowPassed = convolve(lowImage, 2dLowKernel)
+
+
+2dHighKernel = makeGaussianKernel(highSigma)
+highPassed = convolve(highImage, 2dHighKernel)
+
+highPassed = highImage.astype(np.float64, copy=False) - highPassed.astype(np.float64, copy=False)
+hybridImage = lowPassed.astype(np.float64, copy=False) + highPassed.astype(np.float64, copy=False)
+
+return hybridImage.astype(lowImage.dtype)
+ 
 def makeGaussianKernel(sigma: float) -> np.ndarray:
 """
 Use this function to create a 2D gaussian kernel with standard deviation sigma.
 The kernel values should sum to 1.0, and the size should be floor(8*sigma+1) or
 floor(8*sigma+1)+1 (whichever is odd) as per the assignment specification.
 """
-# Your code here.
 n = int(math.floor(8 * sigma + 1))
 if n % 2 == 0:
     n += 1
